@@ -1,4 +1,4 @@
-package com.uco.ucopetuserprocessor.processor.notification;
+package com.uco.ucopetuserprocessor.consumer.notification;
 
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.stereotype.Component;

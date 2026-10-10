@@ -1,4 +1,4 @@
-package com.uco.ucopetuserprocessor.processor.tutorPet;
+package com.uco.ucopetuserprocessor.consumer.tutorPet;
 
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.stereotype.Component;
