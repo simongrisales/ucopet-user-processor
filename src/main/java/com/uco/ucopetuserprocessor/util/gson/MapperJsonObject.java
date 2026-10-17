@@ -1,6 +1,6 @@
 package com.uco.ucopetuserprocessor.util.gson;
 
-public interface JsonObjectMapper {
+public interface MapperJsonObject {
 
 	<T> String toJson(T object);
 

@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Component;
 
 @Component
-public class JacksonJsonObjectMapper implements JsonObjectMapper {
+public class MapperJsonObjectJackson implements MapperJsonObject {
 
 	private final ObjectMapper objectMapper = new ObjectMapper();
 

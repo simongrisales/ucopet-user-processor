@@ -1,10 +1,10 @@
-package com.uco.ucopetuserprocessor.consumer.person;
+package com.uco.ucopetuserprocessor.messaging.person;
 
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.stereotype.Component;
 
 @Component
-public class PersonMessageListener {
+public class ReceiverMessagesBrokerPerson {
 
 	@RabbitListener(queues = "${ucopet.rabbitmq.user.person.create.queue}")
 	public void listenCreate(String message) {
