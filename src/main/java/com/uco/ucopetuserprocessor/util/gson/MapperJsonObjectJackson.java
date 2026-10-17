@@ -7,7 +7,11 @@ import org.springframework.stereotype.Component;
 @Component
 public class MapperJsonObjectJackson implements MapperJsonObject {
 
-	private final ObjectMapper objectMapper = new ObjectMapper();
+	private final ObjectMapper objectMapper;
+
+	public MapperJsonObjectJackson(ObjectMapper objectMapper) {
+		this.objectMapper = objectMapper;
+	}
 
 	@Override
 	public <T> String toJson(T object) {
