@@ -4,7 +4,7 @@ import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.stereotype.Component;
 
 @Component
-public class ReceiverMessagesBrokerDoctor {
+public class DoctorCreationReceiverMessage {
 
 	@RabbitListener(queues = "${ucopet.rabbitmq.user.doctor.create.queue}")
 	public void listenCreate(String message) {
