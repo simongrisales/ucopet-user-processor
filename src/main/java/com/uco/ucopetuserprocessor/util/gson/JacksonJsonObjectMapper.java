@@ -1,4 +1,4 @@
-package com.uco.ucopetuserprocessor.json;
+package com.uco.ucopetuserprocessor.util.gson;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
