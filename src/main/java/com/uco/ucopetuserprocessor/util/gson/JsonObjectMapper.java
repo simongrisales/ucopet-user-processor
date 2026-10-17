@@ -1,4 +1,4 @@
-package com.uco.ucopetuserprocessor.json;
+package com.uco.ucopetuserprocessor.util.gson;
 
 public interface JsonObjectMapper {
 
