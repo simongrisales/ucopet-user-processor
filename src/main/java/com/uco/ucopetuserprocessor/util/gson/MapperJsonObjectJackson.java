@@ -3,6 +3,7 @@ package com.uco.ucopetuserprocessor.util.gson;
 import org.springframework.stereotype.Component;
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.ObjectMapper;
+
 @Component
 public class MapperJsonObjectJackson implements MapperJsonObject {
 	private final ObjectMapper objectMapper;

@@ -6,7 +6,9 @@ import org.springframework.stereotype.Component;
 @Component
 public class PersonCreationReceiverMessage {
 
-	@RabbitListener(queues = "${ucopet.rabbitmq.user.person.create.queue}")
+	// Descomentar cuando tenga las colas, ya que interferia con el API
+
+	/*@RabbitListener(queues = "${ucopet.rabbitmq.user.person.create.queue}")
 	public void listenCreate(String message) {
 		// TODO: Process person creation message.
 	}
@@ -20,4 +22,4 @@ public class PersonCreationReceiverMessage {
 	public void listenDeactivate(String message) {
 		// TODO: Process person deactivation message.
 	}
-}
+*/}
