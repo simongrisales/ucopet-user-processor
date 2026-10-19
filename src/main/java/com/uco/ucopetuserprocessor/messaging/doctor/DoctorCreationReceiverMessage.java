@@ -6,7 +6,9 @@ import org.springframework.stereotype.Component;
 @Component
 public class DoctorCreationReceiverMessage {
 
-	@RabbitListener(queues = "${ucopet.rabbitmq.user.doctor.create.queue}")
+	// Descomentar cuando tenga las colas, ya que interferia con el API
+
+	/*@RabbitListener(queues = "${ucopet.rabbitmq.user.doctor.create.queue}")
 	public void listenCreate(String message) {
 		// TODO: Process doctor creation message.
 	}
@@ -20,4 +22,4 @@ public class DoctorCreationReceiverMessage {
 	public void listenDeactivate(String message) {
 		// TODO: Process doctor deactivation message.
 	}
-}
+*/}
