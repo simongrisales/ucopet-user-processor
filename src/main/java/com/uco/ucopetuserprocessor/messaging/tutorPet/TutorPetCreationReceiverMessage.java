@@ -6,7 +6,8 @@ import org.springframework.stereotype.Component;
 @Component
 public class TutorPetCreationReceiverMessage {
 
-	@RabbitListener(queues = "${ucopet.rabbitmq.user.tutor-pet.create.queue}")
+	// Descomentar cuando tenga las colas, ya que interferia con el API
+	/*@RabbitListener(queues = "${ucopet.rabbitmq.user.tutor-pet.create.queue}")
 	public void listenCreate(String message) {
 		// TODO: Process tutor pet creation message.
 	}
@@ -20,4 +21,4 @@ public class TutorPetCreationReceiverMessage {
 	public void listenDeactivate(String message) {
 		// TODO: Process tutor pet deactivation message.
 	}
-}
+*/}

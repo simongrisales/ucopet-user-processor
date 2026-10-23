@@ -1,23 +1,35 @@
 package com.uco.ucopetuserprocessor.messaging.pet;
 
+import com.uco.ucopetuserprocessor.domain.pet.PetDomain;
+import com.uco.ucopetuserprocessor.service.pet.PetService;
+import com.uco.ucopetuserprocessor.util.gson.MapperJsonObject;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.stereotype.Component;
 
 @Component
 public class PetCreationReceiverMessage {
 
-	@RabbitListener(queues = "${ucopet.rabbitmq.user.pet.create.queue}")
-	public void listenCreate(String message) {
-		// TODO: Process pet creation message.
+	private final MapperJsonObject mapperJsonObject;
+	private final PetService petService;
+
+	public PetCreationReceiverMessage(MapperJsonObject mapperJsonObject, PetService petService) {
+		this.mapperJsonObject = mapperJsonObject;
+		this.petService = petService;
 	}
 
-	@RabbitListener(queues = "${ucopet.rabbitmq.user.pet.update.queue}")
-	public void listenUpdate(String message) {
-		// TODO: Process pet update message.
-	}
+	@RabbitListener(queues = "${user.pet.creation.queue-name}")
+	public void receiveMessageCreatePet(String message) {
+		try {
+			PetDomain pet = mapperJsonObject.fromJson(message, PetDomain.class);
 
-	@RabbitListener(queues = "${ucopet.rabbitmq.user.pet.deactivate.queue}")
-	public void listenDeactivate(String message) {
-		// TODO: Process pet deactivation message.
+			petService.createPet(pet);
+
+		} catch (Exception e) {
+			System.err.println(
+					"Error al recibir la creación de Pet: "
+							+ e.getMessage()
+			);
+			throw e;
+		}
 	}
 }
