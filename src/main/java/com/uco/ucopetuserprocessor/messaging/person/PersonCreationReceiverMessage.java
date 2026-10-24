@@ -5,7 +5,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.stereotype.Component;
 
-import com.uco.ucopetuserprocessor.dto.person.PersonMessageDTO;
+import com.uco.ucopetuserprocessor.domain.person.PersonDomain;
 import com.uco.ucopetuserprocessor.exception.BusinessException;
 import com.uco.ucopetuserprocessor.service.person.PersonService;
 import com.uco.ucopetuserprocessor.util.gson.MapperJsonObject;
@@ -25,9 +25,9 @@ public class PersonCreationReceiverMessage {
 
     @RabbitListener(queues = "${user.person.creation.queue-name}")
     public void receiveMessageCreatePerson(String message) {
-        PersonMessageDTO person;
+        PersonDomain person;
         try {
-            person = mapperJsonObject.fromJson(message, PersonMessageDTO.class);
+            person = mapperJsonObject.fromJson(message, PersonDomain.class);
         } catch (IllegalArgumentException e) {
             LOGGER.error("Mensaje para crear una persona descartado: el JSON no es valido", e);
             return;
@@ -39,9 +39,9 @@ public class PersonCreationReceiverMessage {
 
         try {
             personService.create(person);
-            LOGGER.info("Persona {}: se pudo crear", person.id());
+            LOGGER.info("Persona {}: se pudo crear", person.getId());
         } catch (BusinessException e) {
-            LOGGER.warn("No se pudo crear la persona {}: {}", person.id(), e.getMessage());
+            LOGGER.warn("No se pudo crear la persona {}: {}", person.getId(), e.getMessage());
         }
     }
 }

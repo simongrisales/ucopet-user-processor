@@ -5,7 +5,7 @@ import java.util.UUID;
 
 import org.hibernate.annotations.ColumnDefault;
 
-import com.uco.ucopetuserprocessor.dto.person.DocumentType;
+import com.uco.ucopetuserprocessor.model.person.enums.DocumentType;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
