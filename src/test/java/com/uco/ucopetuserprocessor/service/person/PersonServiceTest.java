@@ -20,9 +20,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.uco.ucopetuserprocessor.domain.person.PersonDomain;
-import com.uco.ucopetuserprocessor.dto.person.DocumentType;
-import com.uco.ucopetuserprocessor.dto.person.PersonMessageDTO;
 import com.uco.ucopetuserprocessor.exception.BusinessException;
+import com.uco.ucopetuserprocessor.model.person.enums.DocumentType;
 import com.uco.ucopetuserprocessor.repository.person.PersonRepository;
 
 @ExtendWith(MockitoExtension.class)
@@ -50,7 +49,7 @@ class PersonServiceTest {
         void savesWithApiId() {
             UUID id = UUID.randomUUID();
 
-            service.create(message(id, "  Ana@UCOPET.com ", false, null));
+            service.create(message(id, "  Ana@UCOPET.com ", false, true));
 
             ArgumentCaptor<PersonDomain> saved = ArgumentCaptor.forClass(PersonDomain.class);
             verify(personRepository).saveAndFlush(saved.capture());
@@ -66,7 +65,7 @@ class PersonServiceTest {
             UUID id = UUID.randomUUID();
             when(personRepository.existsById(id)).thenReturn(true);
 
-            assertThatThrownBy(() -> service.create(message(id, EMAIL, false, null)))
+            assertThatThrownBy(() -> service.create(message(id, EMAIL, false, true)))
                     .isInstanceOf(BusinessException.class);
             verify(personRepository, never()).saveAndFlush(any(PersonDomain.class));
         }
@@ -77,7 +76,7 @@ class PersonServiceTest {
             when(personRepository.findByEmailIgnoreCase(EMAIL))
                     .thenReturn(Optional.of(person(UUID.randomUUID(), false, true)));
 
-            assertThatThrownBy(() -> service.create(message(UUID.randomUUID(), "ANA@ucopet.com", false, null)))
+            assertThatThrownBy(() -> service.create(message(UUID.randomUUID(), "ANA@ucopet.com", false, true)))
                     .isInstanceOf(BusinessException.class)
                     .hasMessageContaining("correo");
             verify(personRepository, never()).saveAndFlush(any(PersonDomain.class));
@@ -86,7 +85,7 @@ class PersonServiceTest {
         @Test
         @DisplayName("un mensaje sin id o sin documento no se guarda")
         void missingRequiredData() {
-            PersonMessageDTO withoutId = message(null, EMAIL, false, null);
+            PersonDomain withoutId = message(null, EMAIL, false, true);
 
             assertThatThrownBy(() -> service.create(withoutId))
                     .isInstanceOf(BusinessException.class);
@@ -99,12 +98,12 @@ class PersonServiceTest {
     class Update {
 
         @Test
-        @DisplayName("admin y active en null no cambian nada (asi llegan cuando no edita un ADMIN)")
-        void nullFlagsDoNotChange() {
+        @DisplayName("si admin y active llegan igual que en la base, no cambian nada (asi llegan cuando no edita un ADMIN)")
+        void sameFlagsDoNotChange() {
             PersonDomain ana = person(UUID.randomUUID(), false, true);
             when(personRepository.findById(ana.getId())).thenReturn(Optional.of(ana));
 
-            service.update(message(ana.getId(), EMAIL, null, null));
+            service.update(message(ana.getId(), EMAIL, false, true));
 
             assertThat(ana.isAdmin()).isFalse();
             assertThat(ana.isActive()).isTrue();
@@ -113,12 +112,26 @@ class PersonServiceTest {
         }
 
         @Test
+        @DisplayName("no borra la contrasena ni el tokenVersion que maneja el API")
+        void keepsApiOnlyFields() {
+            PersonDomain ana = person(UUID.randomUUID(), false, true);
+            ana.setPasswordHash("hash-de-la-contrasena");
+            ana.setTokenVersion(3);
+            when(personRepository.findById(ana.getId())).thenReturn(Optional.of(ana));
+
+            service.update(message(ana.getId(), EMAIL, false, true));
+
+            assertThat(ana.getPasswordHash()).isEqualTo("hash-de-la-contrasena");
+            assertThat(ana.getTokenVersion()).isEqualTo(3);
+        }
+
+        @Test
         @DisplayName("dar el rol ADMIN invalida los tokens de esa persona")
         void grantingAdminRevokesTokens() {
             PersonDomain ana = person(UUID.randomUUID(), false, true);
             when(personRepository.findById(ana.getId())).thenReturn(Optional.of(ana));
 
-            service.update(message(ana.getId(), EMAIL, true, null));
+            service.update(message(ana.getId(), EMAIL, true, true));
 
             assertThat(ana.isAdmin()).isTrue();
             assertThat(ana.getTokenVersion()).isEqualTo(1);
@@ -131,7 +144,7 @@ class PersonServiceTest {
             when(personRepository.findById(admin.getId())).thenReturn(Optional.of(admin));
             when(personRepository.countByAdminTrueAndActiveTrue()).thenReturn(1L);
 
-            assertThatThrownBy(() -> service.update(message(admin.getId(), EMAIL, false, null)))
+            assertThatThrownBy(() -> service.update(message(admin.getId(), EMAIL, false, true)))
                     .isInstanceOf(BusinessException.class);
             verify(personRepository, never()).saveAndFlush(any(PersonDomain.class));
         }
@@ -142,7 +155,7 @@ class PersonServiceTest {
             UUID id = UUID.randomUUID();
             when(personRepository.findById(id)).thenReturn(Optional.empty());
 
-            assertThatThrownBy(() -> service.update(message(id, EMAIL, null, null)))
+            assertThatThrownBy(() -> service.update(message(id, EMAIL, false, true)))
                     .isInstanceOf(BusinessException.class);
         }
     }
@@ -179,9 +192,20 @@ class PersonServiceTest {
 
     // ---------------------------------------------------------------- helpers
 
-    private static PersonMessageDTO message(UUID id, String email, Boolean admin, Boolean active) {
-        return new PersonMessageDTO(id, DocumentType.CC, "10203040", "Ana", "Prueba", email,
-                "Calle 1 # 2-3, Rionegro", "3000000000", admin, active);
+    // Asi llega el mensaje del API: convertido en PersonDomain, sin contrasena ni tokenVersion.
+    private static PersonDomain message(UUID id, String email, boolean admin, boolean active) {
+        PersonDomain message = new PersonDomain();
+        message.setId(id);
+        message.setDocumentType(DocumentType.CC);
+        message.setDocumentNumber("10203040");
+        message.setFirstName("Ana");
+        message.setLastName("Prueba");
+        message.setEmail(email);
+        message.setAddress("Calle 1 # 2-3, Rionegro");
+        message.setPhone("3000000000");
+        message.setAdmin(admin);
+        message.setActive(active);
+        return message;
     }
 
     private static PersonDomain person(UUID id, boolean admin, boolean active) {

@@ -1,7 +1,5 @@
-package com.uco.ucopetuserprocessor.dto.person;
+package com.uco.ucopetuserprocessor.model.person.enums;
 
-// Copia del enum del API: los dos lados tienen que tener exactamente los mismos valores,
-// porque viajan por nombre en el JSON del mensaje y se guardan como texto en la tabla persons.
 public enum DocumentType {
     CC("Cedula de ciudadania"),
     TI("Tarjeta de identidad"),

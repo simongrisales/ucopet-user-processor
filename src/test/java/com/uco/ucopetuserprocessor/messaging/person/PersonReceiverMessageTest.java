@@ -17,9 +17,9 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import com.uco.ucopetuserprocessor.dto.person.DocumentType;
-import com.uco.ucopetuserprocessor.dto.person.PersonMessageDTO;
+import com.uco.ucopetuserprocessor.domain.person.PersonDomain;
 import com.uco.ucopetuserprocessor.exception.BusinessException;
+import com.uco.ucopetuserprocessor.model.person.enums.DocumentType;
 import com.uco.ucopetuserprocessor.service.person.PersonService;
 import com.uco.ucopetuserprocessor.util.gson.MapperJsonObject;
 import com.uco.ucopetuserprocessor.util.gson.MapperJsonObjectJackson;
@@ -58,28 +58,29 @@ class PersonReceiverMessageTest {
 
         creationReceiver.receiveMessageCreatePerson(json);
 
-        ArgumentCaptor<PersonMessageDTO> captor = ArgumentCaptor.forClass(PersonMessageDTO.class);
+        ArgumentCaptor<PersonDomain> captor = ArgumentCaptor.forClass(PersonDomain.class);
         verify(personService).create(captor.capture());
-        assertThat(captor.getValue().id()).isEqualTo(id);
-        assertThat(captor.getValue().documentType()).isEqualTo(DocumentType.CC);
-        assertThat(captor.getValue().admin()).isFalse();
+        assertThat(captor.getValue().getId()).isEqualTo(id);
+        assertThat(captor.getValue().getDocumentType()).isEqualTo(DocumentType.CC);
+        assertThat(captor.getValue().isAdmin()).isFalse();
+        assertThat(captor.getValue().isActive()).isTrue();
     }
 
     @Test
-    @DisplayName("actualizar: admin y active en null llegan en null (no se tocan)")
-    void updateKeepsNullFlags() {
+    @DisplayName("actualizar: admin y active llegan tal como los manda el API")
+    void updateReadsFlags() {
         UUID id = UUID.randomUUID();
         String json = """
                 {"id":"%s","documentType":"CC","documentNumber":"10203040","firstName":"Ana",
-                 "lastName":"Prueba","admin":null,"active":null}
+                 "lastName":"Prueba","admin":true,"active":false}
                 """.formatted(id);
 
         updateReceiver.receiveMessageUpdatePerson(json);
 
-        ArgumentCaptor<PersonMessageDTO> captor = ArgumentCaptor.forClass(PersonMessageDTO.class);
+        ArgumentCaptor<PersonDomain> captor = ArgumentCaptor.forClass(PersonDomain.class);
         verify(personService).update(captor.capture());
-        assertThat(captor.getValue().admin()).isNull();
-        assertThat(captor.getValue().active()).isNull();
+        assertThat(captor.getValue().isAdmin()).isTrue();
+        assertThat(captor.getValue().isActive()).isFalse();
     }
 
     @Test
@@ -96,7 +97,7 @@ class PersonReceiverMessageTest {
     @DisplayName("un error de negocio no se lanza: si se lanzara, Rabbit reintentaria el mensaje para siempre")
     void businessErrorIsNotRethrown() {
         doThrow(new BusinessException("Ya hay una persona registrada con ese correo"))
-                .when(personService).update(any(PersonMessageDTO.class));
+                .when(personService).update(any(PersonDomain.class));
         String json = "{\"id\":\"" + UUID.randomUUID() + "\",\"documentType\":\"CC\"}";
 
         assertThatCode(() -> updateReceiver.receiveMessageUpdatePerson(json)).doesNotThrowAnyException();
