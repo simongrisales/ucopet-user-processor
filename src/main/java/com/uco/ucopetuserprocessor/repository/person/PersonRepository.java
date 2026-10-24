@@ -7,7 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import com.uco.ucopetuserprocessor.domain.person.PersonDomain;
-import com.uco.ucopetuserprocessor.dto.person.DocumentType;
+import com.uco.ucopetuserprocessor.model.person.enums.DocumentType;
 
 @Repository
 public interface PersonRepository extends JpaRepository<PersonDomain, UUID> {
