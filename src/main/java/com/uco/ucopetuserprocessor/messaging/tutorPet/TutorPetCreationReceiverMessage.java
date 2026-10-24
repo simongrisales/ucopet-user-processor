@@ -1,6 +1,7 @@
 package com.uco.ucopetuserprocessor.messaging.tutorPet;
 
 import com.uco.ucopetuserprocessor.domain.tutorPet.TutorPetDomain;
+import com.uco.ucopetuserprocessor.exception.BusinessException;
 import com.uco.ucopetuserprocessor.service.tutorPet.TutorPetService;
 import com.uco.ucopetuserprocessor.util.gson.MapperJsonObject;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
@@ -19,7 +20,12 @@ public class TutorPetCreationReceiverMessage {
 
     @RabbitListener(queues = "${user.tutor-pet.creation.queue-name}")
     public void listenCreate(String message) {
-        TutorPetDomain tutorPet = mapperJsonObject.fromJson(message, TutorPetDomain.class);
+        TutorPetDomain tutorPet;
+        try {
+            tutorPet = mapperJsonObject.fromJson(message, TutorPetDomain.class);
+        } catch (IllegalArgumentException e) {
+            throw new BusinessException("El mensaje de creación de TutorPet tiene un formato inválido.");
+        }
         tutorPetService.create(tutorPet);
     }
 }
