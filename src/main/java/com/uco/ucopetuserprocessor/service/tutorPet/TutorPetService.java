@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
+import java.util.Objects;
 
 @Service
 public class TutorPetService {
@@ -28,7 +29,11 @@ public class TutorPetService {
     @Transactional
     public void create(TutorPetDomain tutorPet) {
         validateTutorPet(tutorPet);
-        if (tutorPetRepository.existsById(tutorPet.getId())) {
+        TutorPetDomain existingTutorPet = tutorPetRepository.findById(tutorPet.getId()).orElse(null);
+        if (existingTutorPet != null) {
+            if (Objects.equals(existingTutorPet.getPerson(), tutorPet.getPerson())) {
+                return;
+            }
             throw new BusinessException("Ya existe un TutorPet con el identificador: " + tutorPet.getId());
         }
         validatePersonExists(tutorPet.getPerson());

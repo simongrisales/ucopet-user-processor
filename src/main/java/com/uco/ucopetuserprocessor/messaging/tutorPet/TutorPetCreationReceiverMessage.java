@@ -1,7 +1,6 @@
 package com.uco.ucopetuserprocessor.messaging.tutorPet;
 
 import com.uco.ucopetuserprocessor.domain.tutorPet.TutorPetDomain;
-import com.uco.ucopetuserprocessor.exception.BusinessException;
 import com.uco.ucopetuserprocessor.service.tutorPet.TutorPetService;
 import com.uco.ucopetuserprocessor.util.gson.MapperJsonObject;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
@@ -12,20 +11,26 @@ public class TutorPetCreationReceiverMessage {
 
     private final MapperJsonObject mapperJsonObject;
     private final TutorPetService tutorPetService;
+    private final TutorPetFailureHandler failureHandler;
 
-    public TutorPetCreationReceiverMessage(MapperJsonObject mapperJsonObject, TutorPetService tutorPetService) {
+    public TutorPetCreationReceiverMessage(
+            MapperJsonObject mapperJsonObject,
+            TutorPetService tutorPetService,
+            TutorPetFailureHandler failureHandler) {
         this.mapperJsonObject = mapperJsonObject;
         this.tutorPetService = tutorPetService;
+        this.failureHandler = failureHandler;
     }
 
-    @RabbitListener(queues = "${user.tutor-pet.creation.queue-name}")
+    @RabbitListener(
+            queues = "${user.tutor-pet.creation.queue-name}",
+            containerFactory = "tutorPetListenerContainerFactory")
     public void listenCreate(String message) {
-        TutorPetDomain tutorPet;
         try {
-            tutorPet = mapperJsonObject.fromJson(message, TutorPetDomain.class);
-        } catch (IllegalArgumentException e) {
-            throw new BusinessException("El mensaje de creación de TutorPet tiene un formato inválido.");
+            TutorPetDomain tutorPet = mapperJsonObject.fromJson(message, TutorPetDomain.class);
+            tutorPetService.create(tutorPet);
+        } catch (Exception e) {
+            failureHandler.creation(message, e);
         }
-        tutorPetService.create(tutorPet);
     }
 }

@@ -1,7 +1,6 @@
 package com.uco.ucopetuserprocessor.messaging.tutorPet;
 
 import com.uco.ucopetuserprocessor.domain.tutorPet.TutorPetDomain;
-import com.uco.ucopetuserprocessor.exception.BusinessException;
 import com.uco.ucopetuserprocessor.service.tutorPet.TutorPetService;
 import com.uco.ucopetuserprocessor.util.gson.MapperJsonObject;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
@@ -12,20 +11,26 @@ public class TutorPetUpdateReceiverMessage {
 
     private final MapperJsonObject mapperJsonObject;
     private final TutorPetService tutorPetService;
+    private final TutorPetFailureHandler failureHandler;
 
-    public TutorPetUpdateReceiverMessage(MapperJsonObject mapperJsonObject, TutorPetService tutorPetService) {
+    public TutorPetUpdateReceiverMessage(
+            MapperJsonObject mapperJsonObject,
+            TutorPetService tutorPetService,
+            TutorPetFailureHandler failureHandler) {
         this.mapperJsonObject = mapperJsonObject;
         this.tutorPetService = tutorPetService;
+        this.failureHandler = failureHandler;
     }
 
-    @RabbitListener(queues = "${user.tutor-pet.update.queue-name}")
+    @RabbitListener(
+            queues = "${user.tutor-pet.update.queue-name}",
+            containerFactory = "tutorPetListenerContainerFactory")
     public void listenUpdate(String message) {
-        TutorPetDomain tutorPet;
         try {
-            tutorPet = mapperJsonObject.fromJson(message, TutorPetDomain.class);
-        } catch (IllegalArgumentException e) {
-            throw new BusinessException("El mensaje de actualización de TutorPet tiene un formato inválido.");
+            TutorPetDomain tutorPet = mapperJsonObject.fromJson(message, TutorPetDomain.class);
+            tutorPetService.update(tutorPet == null ? null : tutorPet.getId(), tutorPet);
+        } catch (Exception e) {
+            failureHandler.update(message, e);
         }
-        tutorPetService.update(tutorPet == null ? null : tutorPet.getId(), tutorPet);
     }
 }
