@@ -1,7 +1,6 @@
 package com.uco.ucopetuserprocessor.messaging.tutorPet;
 
 import com.uco.ucopetuserprocessor.domain.tutorPet.TutorPetDomain;
-import com.uco.ucopetuserprocessor.exception.BusinessException;
 import com.uco.ucopetuserprocessor.service.tutorPet.TutorPetService;
 import com.uco.ucopetuserprocessor.util.gson.MapperJsonObject;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
@@ -12,20 +11,26 @@ public class TutorPetDeactivationReceiverMessage {
 
     private final MapperJsonObject mapperJsonObject;
     private final TutorPetService tutorPetService;
+    private final TutorPetFailureHandler failureHandler;
 
-    public TutorPetDeactivationReceiverMessage(MapperJsonObject mapperJsonObject, TutorPetService tutorPetService) {
+    public TutorPetDeactivationReceiverMessage(
+            MapperJsonObject mapperJsonObject,
+            TutorPetService tutorPetService,
+            TutorPetFailureHandler failureHandler) {
         this.mapperJsonObject = mapperJsonObject;
         this.tutorPetService = tutorPetService;
+        this.failureHandler = failureHandler;
     }
 
-    @RabbitListener(queues = "${user.tutor-pet.deactivation.queue-name}")
+    @RabbitListener(
+            queues = "${user.tutor-pet.deactivation.queue-name}",
+            containerFactory = "tutorPetListenerContainerFactory")
     public void listenDeactivate(String message) {
-        TutorPetDomain tutorPet;
         try {
-            tutorPet = mapperJsonObject.fromJson(message, TutorPetDomain.class);
-        } catch (IllegalArgumentException e) {
-            throw new BusinessException("El mensaje de desactivación de TutorPet tiene un formato inválido.");
+            TutorPetDomain tutorPet = mapperJsonObject.fromJson(message, TutorPetDomain.class);
+            tutorPetService.deactivate(tutorPet == null ? null : tutorPet.getId());
+        } catch (Exception e) {
+            failureHandler.deactivation(message, e);
         }
-        tutorPetService.deactivate(tutorPet == null ? null : tutorPet.getId());
     }
 }
