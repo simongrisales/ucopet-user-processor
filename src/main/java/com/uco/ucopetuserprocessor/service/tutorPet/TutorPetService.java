@@ -5,6 +5,8 @@ import com.uco.ucopetuserprocessor.exception.BusinessException;
 import com.uco.ucopetuserprocessor.repository.person.PersonRepository;
 import com.uco.ucopetuserprocessor.repository.tutorPet.TutorPetRepository;
 import com.uco.ucopetuserprocessor.service.person.PersonService;
+import com.uco.ucopetuserprocessor.model.notification.enums.NotificationType;
+import com.uco.ucopetuserprocessor.service.notification.NotificationEmitter;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,13 +19,16 @@ public class TutorPetService {
     private final TutorPetRepository tutorPetRepository;
     private final PersonRepository personRepository;
     private final PersonService personService;
+    private final NotificationEmitter notificationEmitter;
 
     public TutorPetService(TutorPetRepository tutorPetRepository,
                            PersonRepository personRepository,
-                           PersonService personService) {
+                           PersonService personService,
+                           NotificationEmitter notificationEmitter) {
         this.tutorPetRepository = tutorPetRepository;
         this.personRepository = personRepository;
         this.personService = personService;
+        this.notificationEmitter = notificationEmitter;
     }
 
     @Transactional
@@ -38,6 +43,12 @@ public class TutorPetService {
         }
         validatePersonExists(tutorPet.getPerson());
         tutorPetRepository.save(tutorPet);
+
+        notificationEmitter.emit(
+                NotificationType.TUTOR_CREATED,
+                "Tutor creado",
+                "El tutor " + personName(tutorPet.getPerson()) + " fue creado correctamente."
+        );
     }
 
     @Transactional
@@ -55,6 +66,12 @@ public class TutorPetService {
         validatePersonExists(tutorPet.getPerson());
         existingTutorPet.setPerson(tutorPet.getPerson());
         tutorPetRepository.save(existingTutorPet);
+
+        notificationEmitter.emit(
+                NotificationType.TUTOR_UPDATED,
+                "Tutor actualizado",
+                "El tutor " + personName(existingTutorPet.getPerson()) + " fue actualizado correctamente."
+        );
     }
 
     @Transactional
@@ -69,6 +86,18 @@ public class TutorPetService {
         }
 
         personService.deactivate(existingTutorPet.getPerson());
+
+        notificationEmitter.emit(
+                NotificationType.TUTOR_DELETED,
+                "Tutor eliminado",
+                "El tutor " + personName(existingTutorPet.getPerson()) + " fue eliminado correctamente."
+        );
+    }
+
+    private String personName(UUID personId) {
+        return personRepository.findById(personId)
+                .map(p -> p.getFirstName() + " " + p.getLastName())
+                .orElse("");
     }
 
     private void validateTutorPet(TutorPetDomain tutorPet) {

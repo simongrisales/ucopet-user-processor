@@ -7,6 +7,8 @@ import org.springframework.stereotype.Component;
 
 import com.uco.ucopetuserprocessor.domain.person.PersonDomain;
 import com.uco.ucopetuserprocessor.exception.BusinessException;
+import com.uco.ucopetuserprocessor.model.notification.enums.NotificationType;
+import com.uco.ucopetuserprocessor.service.notification.NotificationEmitter;
 import com.uco.ucopetuserprocessor.service.person.PersonService;
 import com.uco.ucopetuserprocessor.util.gson.MapperJsonObject;
 
@@ -17,10 +19,14 @@ public class PersonDeactivationReceiverMessage {
 
     private final MapperJsonObject mapperJsonObject;
     private final PersonService personService;
+    private final NotificationEmitter notificationEmitter;
 
-    public PersonDeactivationReceiverMessage(MapperJsonObject mapperJsonObject, PersonService personService) {
+    public PersonDeactivationReceiverMessage(MapperJsonObject mapperJsonObject,
+                                             PersonService personService,
+                                             NotificationEmitter notificationEmitter) {
         this.mapperJsonObject = mapperJsonObject;
         this.personService = personService;
+        this.notificationEmitter = notificationEmitter;
     }
 
     @RabbitListener(queues = "${user.person.deactivation.queue-name}")
@@ -40,6 +46,10 @@ public class PersonDeactivationReceiverMessage {
         try {
             personService.deactivate(person.getId());
             LOGGER.info("Persona {}: se pudo dar de baja", person.getId());
+            notificationEmitter.emit(
+                    NotificationType.USER_DELETED,
+                    "Usuario eliminado",
+                    "El usuario fue eliminado correctamente.");
         } catch (BusinessException e) {
             LOGGER.warn("No se pudo dar de baja la persona {}: {}", person.getId(), e.getMessage());
         }

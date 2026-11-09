@@ -7,6 +7,8 @@ import org.springframework.stereotype.Component;
 
 import com.uco.ucopetuserprocessor.domain.person.PersonDomain;
 import com.uco.ucopetuserprocessor.exception.BusinessException;
+import com.uco.ucopetuserprocessor.model.notification.enums.NotificationType;
+import com.uco.ucopetuserprocessor.service.notification.NotificationEmitter;
 import com.uco.ucopetuserprocessor.service.person.PersonService;
 import com.uco.ucopetuserprocessor.util.gson.MapperJsonObject;
 
@@ -17,10 +19,14 @@ public class PersonCreationReceiverMessage {
 
     private final MapperJsonObject mapperJsonObject;
     private final PersonService personService;
+    private final NotificationEmitter notificationEmitter;
 
-    public PersonCreationReceiverMessage(MapperJsonObject mapperJsonObject, PersonService personService) {
+    public PersonCreationReceiverMessage(MapperJsonObject mapperJsonObject,
+                                         PersonService personService,
+                                         NotificationEmitter notificationEmitter) {
         this.mapperJsonObject = mapperJsonObject;
         this.personService = personService;
+        this.notificationEmitter = notificationEmitter;
     }
 
     @RabbitListener(queues = "${user.person.creation.queue-name}")
@@ -40,6 +46,11 @@ public class PersonCreationReceiverMessage {
         try {
             personService.create(person);
             LOGGER.info("Persona {}: se pudo crear", person.getId());
+            notificationEmitter.emit(
+                    NotificationType.USER_CREATED,
+                    "Usuario creado",
+                    "El usuario " + person.getFirstName() + " " + person.getLastName()
+                            + " fue creado correctamente.");
         } catch (BusinessException e) {
             LOGGER.warn("No se pudo crear la persona {}: {}", person.getId(), e.getMessage());
         }

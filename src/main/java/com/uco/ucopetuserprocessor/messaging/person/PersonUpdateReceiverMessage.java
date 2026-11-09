@@ -7,6 +7,8 @@ import org.springframework.stereotype.Component;
 
 import com.uco.ucopetuserprocessor.domain.person.PersonDomain;
 import com.uco.ucopetuserprocessor.exception.BusinessException;
+import com.uco.ucopetuserprocessor.model.notification.enums.NotificationType;
+import com.uco.ucopetuserprocessor.service.notification.NotificationEmitter;
 import com.uco.ucopetuserprocessor.service.person.PersonService;
 import com.uco.ucopetuserprocessor.util.gson.MapperJsonObject;
 
@@ -17,10 +19,14 @@ public class PersonUpdateReceiverMessage {
 
     private final MapperJsonObject mapperJsonObject;
     private final PersonService personService;
+    private final NotificationEmitter notificationEmitter;
 
-    public PersonUpdateReceiverMessage(MapperJsonObject mapperJsonObject, PersonService personService) {
+    public PersonUpdateReceiverMessage(MapperJsonObject mapperJsonObject,
+                                       PersonService personService,
+                                       NotificationEmitter notificationEmitter) {
         this.mapperJsonObject = mapperJsonObject;
         this.personService = personService;
+        this.notificationEmitter = notificationEmitter;
     }
 
     @RabbitListener(queues = "${user.person.update.queue-name}")
@@ -40,6 +46,11 @@ public class PersonUpdateReceiverMessage {
         try {
             personService.update(person);
             LOGGER.info("Persona {}: se pudo actualizar", person.getId());
+            notificationEmitter.emit(
+                    NotificationType.USER_UPDATED,
+                    "Usuario actualizado",
+                    "El usuario " + person.getFirstName() + " " + person.getLastName()
+                            + " fue actualizado correctamente.");
         } catch (BusinessException e) {
             LOGGER.warn("No se pudo actualizar la persona {}: {}", person.getId(), e.getMessage());
         }
