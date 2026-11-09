@@ -2,7 +2,9 @@ package com.uco.ucopetuserprocessor.service.doctor;
 
 import com.uco.ucopetuserprocessor.domain.doctor.DoctorDomain;
 import com.uco.ucopetuserprocessor.exception.BusinessException;
+import com.uco.ucopetuserprocessor.model.notification.enums.NotificationType;
 import com.uco.ucopetuserprocessor.repository.doctor.IDoctorRepository;
+import com.uco.ucopetuserprocessor.service.notification.NotificationEmitter;
 import org.springframework.stereotype.Service;
 
 import java.util.UUID;
@@ -13,19 +15,36 @@ public class DoctorService {
     private static final String LICENSE_NUMBER_REGEX = "^[A-Za-z0-9-]+$";
 
     private final IDoctorRepository doctorRepository;
+    private final NotificationEmitter notificationEmitter;
 
-    public DoctorService(IDoctorRepository doctorRepository) {
+    public DoctorService(IDoctorRepository doctorRepository,
+                         NotificationEmitter notificationEmitter) {
         this.doctorRepository = doctorRepository;
+        this.notificationEmitter = notificationEmitter;
     }
 
     public void saveFromMessage(DoctorDomain doctor) {
         validateFields(doctor);
         doctorRepository.save(doctor);
+
+        notificationEmitter.emit(
+                NotificationType.DOCTOR_CREATED,
+                "Médico creado",
+                "El médico con licencia " + doctor.getLicenseNumber().trim()
+                        + " fue creado correctamente."
+        );
     }
 
     public void updateFromMessage(DoctorDomain doctor) {
         validateFields(doctor);
         doctorRepository.save(doctor);
+
+        notificationEmitter.emit(
+                NotificationType.DOCTOR_UPDATED,
+                "Médico actualizado",
+                "El médico con licencia " + doctor.getLicenseNumber().trim()
+                        + " fue actualizado correctamente."
+        );
     }
 
     public void activateFromMessage(DoctorDomain doctor) {
@@ -37,6 +56,12 @@ public class DoctorService {
     public void deactivateFromMessage(DoctorDomain doctor) {
         validateReference(doctor);
         System.out.println("Doctor desactivado (evento recibido, id=" + doctor.getId() + ")");
+
+        notificationEmitter.emit(
+                NotificationType.DOCTOR_DELETED,
+                "Médico eliminado",
+                "El médico fue eliminado correctamente."
+        );
     }
 
     private void validateFields(DoctorDomain doctor) {

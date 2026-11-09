@@ -20,6 +20,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import com.uco.ucopetuserprocessor.domain.person.PersonDomain;
 import com.uco.ucopetuserprocessor.exception.BusinessException;
 import com.uco.ucopetuserprocessor.model.person.enums.DocumentType;
+import com.uco.ucopetuserprocessor.service.notification.NotificationEmitter;
 import com.uco.ucopetuserprocessor.service.person.PersonService;
 import com.uco.ucopetuserprocessor.util.gson.MapperJsonObject;
 import com.uco.ucopetuserprocessor.util.gson.MapperJsonObjectJackson;
@@ -33,6 +34,9 @@ class PersonReceiverMessageTest {
     @Mock
     private PersonService personService;
 
+    @Mock
+    private NotificationEmitter notificationEmitter;
+
     private PersonCreationReceiverMessage creationReceiver;
     private PersonUpdateReceiverMessage updateReceiver;
     private PersonDeactivationReceiverMessage deactivationReceiver;
@@ -41,9 +45,9 @@ class PersonReceiverMessageTest {
     void setUp() {
         // El mapper de JSON es el real: asi se prueba tambien que el JSON del API se entiende.
         MapperJsonObject mapper = new MapperJsonObjectJackson(JsonMapper.builder().build());
-        creationReceiver = new PersonCreationReceiverMessage(mapper, personService);
-        updateReceiver = new PersonUpdateReceiverMessage(mapper, personService);
-        deactivationReceiver = new PersonDeactivationReceiverMessage(mapper, personService);
+        creationReceiver = new PersonCreationReceiverMessage(mapper, personService, notificationEmitter);
+        updateReceiver = new PersonUpdateReceiverMessage(mapper, personService, notificationEmitter);
+        deactivationReceiver = new PersonDeactivationReceiverMessage(mapper, personService, notificationEmitter);
     }
 
     @Test

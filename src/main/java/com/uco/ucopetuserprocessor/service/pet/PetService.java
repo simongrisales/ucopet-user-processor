@@ -5,6 +5,8 @@ import org.springframework.transaction.annotation.Transactional;
 import com.uco.ucopetuserprocessor.domain.pet.PetDomain;
 import com.uco.ucopetuserprocessor.repository.pet.IPetRepository;
 import com.uco.ucopetuserprocessor.exception.BusinessException;
+import com.uco.ucopetuserprocessor.model.notification.enums.NotificationType;
+import com.uco.ucopetuserprocessor.service.notification.NotificationEmitter;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -15,6 +17,7 @@ import java.util.UUID;
 public class PetService {
 
     private final IPetRepository iPetRepository;
+    private final NotificationEmitter notificationEmitter;
 
     private static final String TEXT_REGEX = "\\S+";
     private static final String GENDER_REGEX = "^[MF]$";
@@ -34,8 +37,10 @@ public class PetService {
 
     private static final ZoneId ZONE_ID = ZoneId.of("America/Bogota");
 
-    public PetService(IPetRepository iPetRepository) {
+    public PetService(IPetRepository iPetRepository,
+                      NotificationEmitter notificationEmitter) {
         this.iPetRepository = iPetRepository;
+        this.notificationEmitter = notificationEmitter;
     }
 
 
@@ -55,6 +60,12 @@ public class PetService {
         dto.setCreatedDate(LocalDateTime.now(ZONE_ID));
 
         iPetRepository.save(dto);
+
+        notificationEmitter.emit(
+                NotificationType.PET_CREATED,
+                "Mascota creada",
+                "La mascota " + dto.getName().trim() + " fue creada correctamente."
+        );
     }
 
     @Transactional
@@ -92,6 +103,12 @@ public class PetService {
         existingPet.setModifiedDate(LocalDateTime.now(ZONE_ID));
 
         iPetRepository.save(existingPet);
+
+        notificationEmitter.emit(
+                NotificationType.PET_UPDATED,
+                "Mascota actualizada",
+                "La mascota " + existingPet.getName() + " fue actualizada correctamente."
+        );
     }
 
     @Transactional
@@ -106,6 +123,12 @@ public class PetService {
         existingPet.setModifiedDate(LocalDateTime.now(ZONE_ID));
 
         iPetRepository.save(existingPet);
+
+        notificationEmitter.emit(
+                NotificationType.PET_DELETED,
+                "Mascota eliminada",
+                "La mascota " + existingPet.getName() + " fue eliminada correctamente."
+        );
     }
 
     private void validateFields(PetDomain dto) {

@@ -1,5 +1,6 @@
 package com.uco.ucopetuserprocessor.repository.person;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -17,4 +18,6 @@ public interface PersonRepository extends JpaRepository<PersonDomain, UUID> {
     Optional<PersonDomain> findByDocumentTypeAndDocumentNumber(DocumentType documentType, String documentNumber);
 
     long countByAdminTrueAndActiveTrue();
+
+    List<PersonDomain> findByAdminTrueAndActiveTrue();
 }
