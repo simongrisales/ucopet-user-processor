@@ -73,6 +73,11 @@ public class DoctorService {
         }
         validateUUID(doctor.getIdPerson().toString());
 
+        if (doctor.getHeadquarterId() == null) {
+            throw new BusinessException("El ID de la sede es obligatorio.");
+        }
+        validateUUID(doctor.getHeadquarterId().toString());
+
         String licenseNumber = doctor.getLicenseNumber();
         if (licenseNumber == null || licenseNumber.trim().isEmpty()) {
             throw new BusinessException("El numero de licencia es obligatorio.");

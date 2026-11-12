@@ -48,6 +48,10 @@ public class SpecialtieDoctorService {
             throw new BusinessException("El id de la especialidad es obligatorio.");
         }
         validateUUID(specialtieDoctor.getIdSpecialtie().toString());
+        if (specialtieDoctor.getHeadquarterId() == null) {
+            throw new BusinessException("El ID de la sede es obligatorio.");
+        }
+        validateUUID(specialtieDoctor.getHeadquarterId().toString());
     }
 
     public UUID validateUUID(String uuid) {
